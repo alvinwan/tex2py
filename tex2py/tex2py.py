@@ -6,37 +6,51 @@ class TreeOfContents:
 
     __element = re.compile('(?P<name>[\S]+?)\{(?P<string>[\S\s]+?)\}')
 
-    def __init__(self, tex='', branches=(), hierarchy=('section', 'subsection')):
+    def __init__(self, tex='', name=None, string=None, branches=(),
+        hierarchy=('section', 'subsection')):
         """Construct TreeOfContents object
 
         :param str name: name of latex element
         :param str string: content of latex element
         :param str tex: original tex
         :param list TreeOfContents branches: list of children
-        :param list hierarchy: list of latex elements to determine hierarchy,
-            which will otherwise be determined by latex syntax
+        :param list str hierarchy: list of latex elements to determine
+            hierarchy, which will otherwise be determined by latex syntax
         """
+        if name:
+            self.name, self.string = name, string
+        else:
+            self.name, self.string = self.parseTag(tex)
+
         self.tex = tex
-        self.name, self.string = self.parseTag(tex)
         self.innerTex = self.stripTag(tex, self.name, self.string)
         self.branches = branches or self.parseBranches(self.innerTex)
         self.descendants = self.expandDescendants(self.branches)
-        self.hierarchy = ('document',) + hierarchy
+        self.hierarchy = hierarchy + ('begin',)
 
     @staticmethod
-    def stripTag(tex, name, string):
-        r"""Strip a tag from the provided tex
+    def stripTag(tex, name, string, form='\\%s{%s}'):
+        r"""Strip a tag from the provided tex, only from the beginning and end.
 
-        >>> TOC.stripTag(
-        ... '\\begin{itemize}\\item y\\end{itemize}', 'begin', 'itemize')
+        >>> TOC.stripTag('\\begin{b}\\item y\\end{b}', 'begin', 'b')
         '\\item y'
+        >>> TOC.stripTag('\\begin{b}\\begin{b}\\item y\\end{b}\\end{b}',
+        ... 'begin', 'b')
+        '\\begin{b}\\item y\\end{b}'
         """
-        tag = '\\%s{%s}' % (name, string)
-        stripped = tex.replace(tag, '', 1)
+        stripped = tex.replace(form % (name, string), '', 1)
         if name == 'begin':
-            tag = '\\%s{%s}' % ('end', string)
-            stripped = rreplace(stripped, tag, '', 1)
+            stripped = rreplace(stripped, form % ('end', string), '', 1)
         return stripped
+
+    def parseTopTag(tex, hierarchy=None, form=r'\\%s\{(?P<string>[\S\s]+?\})'):
+        """Parse tex for highest tag in hierarchy"""
+        hierarchy = hierarchy or self.hierarchy
+        for name in hierarchy:
+            search = re.search(form % name)
+            if search:
+                return name, search.group('string')
+        return '[text]', tex  # Warning: [text] is not an actual tag name
 
     @staticmethod
     def parseNameString(tex):
@@ -59,12 +73,11 @@ class TreeOfContents:
         """
         return sum([b.descendants() for b in branches], []) + branches
 
-    @staticmethod
-    def parseBranches(tex):
+    def parseBranches(self, tex, hierarchy=None):
         r"""
         Parse top level of provided latex
 
-        >>> TOC.parseBranches('''
+        >>> TOC().parseBranches('''
         ... \\section{Hello}
         ... This is some text.
         ... \\begin{enumerate}
@@ -73,7 +86,8 @@ class TreeOfContents:
         ... \\section{Yolo}
         ... ''')
         """
-        return []
+        hierarchy = hierarchy or self.hierarchy
+        tag = self.parseTopTag(tex, hierarchy)
 
     def __getattr__(self, attr, *default):
         """Check source for attributes"""
@@ -110,7 +124,9 @@ class TreeOfContents:
         :param str tex: Latex
         :return: TreeOfContents object
         """
-        return TOC(tex)
+        if tex.strip().startswith('\\begin{document}'):
+            return TOC(tex)
+        return TOC(tex, name='[document]', string='')
 
 TOC = TreeOfContents
 
