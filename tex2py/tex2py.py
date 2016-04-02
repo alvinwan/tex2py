@@ -1,97 +1,128 @@
-import re
-from utils import rreplace
+from texSoup import TexSoup
 
 class TreeOfContents:
     """Tree abstraction for latex source"""
 
-    __element = re.compile('(?P<name>[\S]+?)\{(?P<string>[\S\s]+?)\}')
+    source_type = TexSoup
+    valid_tags = ('addcontentsline', 'addtocontents', 'addtocounter', 'address',
+    'addtolength', 'addvspace', 'alph', 'appendix', 'arabic',
+    'author', 'backslash', 'baselineskip', 'baselinestretch', 'bf', 'bibitem',
+    'bigskipamount', 'bigskip', 'boldmath', 'boldsymbol', 'cal', 'caption',
+    'cdots', 'centering', 'chapter', 'circle', 'cite', 'cleardoublepage',
+    'clearpage', 'cline', 'closing', 'color', 'copyright', 'dashbox', 'date',
+    'ddots', 'documentclass', 'dotfill', 'em', 'emph',
+    'ensuremath (LaTeX2e)', 'epigraph', 'euro', 'fbox', 'flushbottom',
+    'fnsymbol', 'footnote', 'footnotemark', 'footnotesize', 'footnotetext',
+    'frac', 'frame', 'framebox', 'frenchspacing', 'hfill', 'hline', 'href',
+    'hrulefill', 'hspace', 'huge', 'Huge', 'hyphenation', 'include',
+    'includegraphics', 'includeonly', 'indent', 'input', 'it', 'item', 'kill',
+    'label', 'large', 'Large', 'LARGE', 'LaTeX', 'LaTeXe', 'ldots', 'left',
+    'lefteqn', 'line', 'linebreak', 'linethickness', 'linewidth',
+    'listoffigures', 'listoftables', 'location', 'makebox', 'maketitle',
+    'markboth markright', 'mathcal', 'mathop', 'mbox', 'medskip', 'multicolumn',
+    'multiput', 'newcommand', 'newcolumntype', 'newcounter', 'newenvironment',
+    'newfont', 'newlength', 'newline', 'newpage', 'newsavebox', 'newtheorem',
+    'nocite', 'noindent', 'nolinebreak', 'nonfrenchspacing', 'normalsize',
+    'nopagebreak', 'not', 'onecolumn', 'opening', 'oval', 'overbrace',
+    'overline', 'pagebreak', 'pagenumbering', 'pageref', 'pagestyle', 'par',
+    'paragraph', 'parbox', 'parindent', 'parskip', 'part', 'protect',
+    'providecommand', 'put', 'quad', 'qquad', 'raggedbottom',
+    'raggedleft', 'raggedright', 'raisebox', 'ref', 'renewcommand', 'right',
+    'rm', 'roman', 'rule', 'savebox', 'sbox', 'sc', 'scriptsize', 'section',
+    'setcounter', 'setlength', 'settowidth', 'sf', 'shortstack', 'signature',
+    'sl', 'slash', 'small', 'smallskip', 'sout', 'space', 'sqrt', 'stackrel',
+    'stepcounter', 'subparagraph', 'subsection', 'subsubsection',
+    'tableofcontents', 'telephone', 'TeX', 'textbf', 'textcolor',
+    'textit', 'textmd', 'textnormal', 'textrm', 'textsc', 'textsf',
+    'textsl', 'texttt', 'textup', 'textwidth', 'textheight', 'thanks',
+    'thispagestyle', 'tiny', 'title', 'today', 'tt', 'twocolumn', 'typeout',
+    'typein', 'uline', 'underbrace', 'underline', 'unitlength', 'usebox',
+    'usecounter', 'uwave', 'value', 'vbox', 'vcenter', 'vdots', 'vector',
+    'verb', 'vfill', 'vline', 'vphantom', 'vspace')
+    allowed_attrs = ('string', 'name')
+    default_hierarchy = ('section', 'subsection')
 
-    def __init__(self, tex='', name=None, string=None, branches=(),
-        hierarchy=('section', 'subsection')):
-        """Construct TreeOfContents object
-
-        :param str name: name of latex element
-        :param str string: content of latex element
-        :param str tex: original tex
-        :param list TreeOfContents branches: list of children
+    def __init__(self, root, branches=(), descendants=(), source=None,
+        depth=None, hierarchy=default_hierarchy):
+        """
+        Construct TreeOfContents object using source
+        :param SourceType source: parsed source
+        :param list TreeOfContents branches: list of direct children
+        :param list SourceType descendants: all descendants
         :param list str hierarchy: list of latex elements to determine
             hierarchy, which will otherwise be determined by latex syntax
         """
-        if name:
-            self.name, self.string = name, string
-        else:
-            self.name, self.string = self.parseTag(tex)
-
-        self.tex = tex
-        self.innerTex = self.stripTag(tex, self.name, self.string)
-        self.branches = branches or self.parseBranches(self.innerTex)
-        self.descendants = self.expandDescendants(self.branches)
-        self.hierarchy = hierarchy + ('begin',)
+        assert source is not None, 'NoneType source passed into TreeOfContents'
+        self.source = source
+        self.depth = depth or self.parseTopDepth()
+        self.descendants = descendants or self.expandDescendants(branches)
+        self.branches = branches or self.parseBranches(descendants)
+        self.hierarchy = hierarchy
 
     @staticmethod
-    def stripTag(tex, name, string, form='\\%s{%s}'):
-        r"""Strip a tag from the provided tex, only from the beginning and end.
-
-        >>> TOC.stripTag('\\begin{b}\\item y\\end{b}', 'begin', 'b')
-        '\\item y'
-        >>> TOC.stripTag('\\begin{b}\\begin{b}\\item y\\end{b}\\end{b}',
-        ... 'begin', 'b')
-        '\\begin{b}\\item y\\end{b}'
+    def getHeadingLevel(ts, hierachy=default_hierarchy):
         """
-        stripped = tex.replace(form % (name, string), '', 1)
-        if name == 'begin':
-            stripped = rreplace(stripped, form % ('end', string), '', 1)
-        return stripped
+        >>> ts = TexSoup('\\section{Hello}').section
+        >>> TOC.getHeadingLevel(bs)
+        0
+        >>> ts2 = bsify('\\textbf{hello again}').textbf
+        >>> TOC.getHeadingLevel(ts2)
+        """
+        try:
+            return hierarchy.index(ts.name)+1
+        except (ValueError, IndexError, TypeError):
+            return None
 
-    def parseTopTag(tex, hierarchy=None, form=r'\\%s\{(?P<string>[\S\s]+?\})'):
-        """Parse tex for highest tag in hierarchy"""
+    def parseTopDepth(self, hierarchy=None, form=r'\\%s'):
+        """Parse tex for highest tag in hierarchy
+
+        >>> TOC().parseTopTag('\\section{Hah}\\subsection{No}')
+        'section'
+        """
         hierarchy = hierarchy or self.hierarchy
-        for name in hierarchy:
-            search = re.search(form % name)
-            if search:
-                return name, search.group('string')
-        return '[text]', tex  # Warning: [text] is not an actual tag name
+        for i, command in enumerate(hierarchy + ('begin',), start=1):
+            search = re.search(form % name, tex)
+            if search: return i
 
-    @staticmethod
-    def parseNameString(tex):
-        r"""Extract name of latex element from tex
-
-        >>> TOC.parseNameString('\\textbf{hello}\\textbf{yolo}')
-        ('\\textbf', 'hello')
+    def expandDescendants(self, branches):
         """
-        match = re.search(TOC.__element, tex)
-        if not match:
-            return '', ''
-        return match.group('name'), match.group('string')
-
-    @staticmethod
-    def expandDescendants(branches):
-        """Expand descendants from list of branches
-
+        Expand descendants from list of branches
         :param list branches: list of immediate children as TreeOfContents objs
         :return: list of all descendants
         """
-        return sum([b.descendants() for b in branches], []) + branches
+        return sum([b.descendants() for b in branches], []) + \
+            [b.source for b in branches]
 
-    def parseBranches(self, tex, hierarchy=None):
-        r"""
-        Parse top level of provided latex
-
-        >>> TOC().parseBranches('''
-        ... \\section{Hello}
-        ... This is some text.
-        ... \\begin{enumerate}
-        ... \\item Item!
-        ... \\end{enumerate}
-        ... \\section{Yolo}
-        ... ''')
+    def parseBranches(self, descendants):
         """
-        hierarchy = hierarchy or self.hierarchy
-        tag = self.parseTopTag(tex, hierarchy)
+        Parse top level of latex
+        :param list elements: list of source objects
+        :return: list of filtered TreeOfContents objects
+        """
+        parsed, parent, cond = [], False, lambda b: (b.string or '').strip()
+        for branch in filter(cond, descendants):
+            if self.getHeadingLevel(branch) == self.depth:
+                parsed.append({'root':branch.string, 'source':branch})
+                parent = True
+            elif not parent:
+                parsed.append({'root':branch.string, 'source':branch})
+            else:
+                parsed[-1].setdefault('descendants', []).append(branch)
+        return [TOC(depth=self.depth+1, **kwargs) for kwargs in parsed]
 
     def __getattr__(self, attr, *default):
         """Check source for attributes"""
-        pass
+        tag = attr[:-1]
+        if attr in self.allowed_attrs:
+            return getattr(self.source, attr, *default)
+        if attr in self.valid_tags:
+            return next(filter(lambda t: t.name == attr, self.branches), None)
+        if len(default):
+            return default[0]
+        if attr[-1] == 's' and tag in self.valid_tags:
+            condition = lambda t: t.name == tag
+            return filter(condition, self.branches)
+        raise AttributeError("'TreeOfContents' object has no attribute '%s'" % attr)
 
     def __repr__(self):
         """Display contents"""
@@ -99,7 +130,7 @@ class TreeOfContents:
 
     def __str__(self):
         """Display contents"""
-        return self.string
+        return self.string or ''
 
     def __iter__(self):
         """Iterator over children"""
@@ -124,12 +155,4 @@ class TreeOfContents:
         :param str tex: Latex
         :return: TreeOfContents object
         """
-        if tex.strip().startswith('\\begin{document}'):
-            return TOC(tex)
-        return TOC(tex, name='[document]', string='')
-
-TOC = TreeOfContents
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+        return TOC('[document]', source=TexSoup.fromLatex(tex))

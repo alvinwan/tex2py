@@ -7,14 +7,6 @@ See [md2py](https://github.com/alvinwan/md2py) for a markdown parse tree.
 
 ## Usage
 
-> **Differences From md2py** Note that tex2py mirrors BeautifulSoup's approach
-to a document tree. In many ways, it thus differs from md2py's TreeOfContents.
-Here are a few of the most important differences:
->
-> - Attribute access is no longer restricted to a node's direct children. It
-can include - as BeautifulSoup does - any of the node's descendants.
-> - Explicitly access a TOC's `string` attribute to retrieve its contents.
-
 LaTeX2Python offers only one function `tex2py`, which generates a Python
 parse tree from Latex. This object is a navigable, "Tree of Contents"
 abstraction for the latex file.
@@ -67,7 +59,45 @@ will generate a tree, abstracting the below structure.
   Waddling  Plopping    I Scream
 ```
 
+At the global level, we can access the title.
 
+```
+>>> toc = tex2py(markdown)
+>>> toc.section
+Chikin Tales
+>>> str(toc.section)
+'Chikin Tales'
+```
+
+Notice that at this level, there are no `subsection`s.
+
+```
+>>> list(toc.subsections)
+[]
+```
+
+The main `section` has two `subsection`s beneath it. We can access both.
+
+```
+>>> list(toc.section.subsections)
+[Chikin Fly, Chikin Scream]
+>>> toc.section.subsection
+Chikin Fly
+```
+
+The `TreeOfContents` class also has a few more conveniences defined. Among them
+is support for indexing. To access the `i`th child of an `<element>` - instead of `<element>.branches[i]` - use `<element>[i]`.
+
+See below for example usage.
+
+```
+>>> toc.section.branches[0] == toc.section[0] == toc.section.subsection
+True
+>>> list(toc.section.subsections)[1] == toc.section[1]
+True
+>>> toc.section[1]
+Chikin Scream
+```
 
 ## Installation
 
@@ -76,3 +106,8 @@ Install via pip.
 ```
 pip install tex2py
 ```
+
+## Additional Notes
+
+- Behind the scenes, tex2py uses [`TexSoup`](https://github.com/alvinwan/TexSoup). All tex2py objects have a
+`source` attribute containing a [TexSoup](https://github.com/alvinwan/TexSoup) object.

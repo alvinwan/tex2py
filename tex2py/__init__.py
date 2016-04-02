@@ -1,4 +1,5 @@
 from .tex2py import TreeOfContents
+from .texSoup import TexSoup
 
 
 def tex2py(md, *args, **kwargs):
