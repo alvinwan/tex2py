@@ -19,7 +19,7 @@ LaTeX2Python offers only one function `tex2py`, which generates a Python
 parse tree from Latex. This object is a navigable, "Tree of Contents"
 abstraction for the latex file.
 
-Take, for example, the following latex file. ([See pdf](https://github.com/alvinwan/md2py/tests/samples/chikin.pdf))
+Take, for example, the following latex file. ([See pdf](https://github.com/alvinwan/tex2py/blob/master/tests/samples/chikin.pdf))
 
 **chikin.tex**
 
