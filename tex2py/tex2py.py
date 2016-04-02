@@ -1,4 +1,5 @@
 import re
+from utils import rreplace
 
 class TreeOfContents:
     """Tree abstraction for latex source"""
@@ -16,31 +17,41 @@ class TreeOfContents:
             which will otherwise be determined by latex syntax
         """
         self.tex = tex
-        self.name, self.string = self.parseNameString(tex)
-        self.branches = branches or self.parseBranches(tex)
+        self.name, self.string = self.parseTag(tex)
+        self.innerTex = self.stripTag(tex, self.name, self.string)
+        self.branches = branches or self.parseBranches(self.innerTex)
+        self.descendants = self.expandDescendants(self.branches)
         self.hierarchy = ('document',) + hierarchy
 
-    def parseNameString(self, tex):
-        """Extract name of latex element from tex
+    @staticmethod
+    def stripTag(tex, name, string):
+        r"""Strip a tag from the provided tex
 
-        >>> hello = TOC('\\\\textbf{hello}')
-        >>> hello.name
-        '\\\\textbf'
-        >>> hello.string
-        'hello'
-        >>> hello
-        hello
+        >>> TOC.stripTag(
+        ... '\\begin{itemize}\\item y\\end{itemize}', 'begin', 'itemize')
+        '\\item y'
         """
-        match = re.search(self.__element, tex)
+        tag = '\\%s{%s}' % (name, string)
+        stripped = tex.replace(tag, '', 1)
+        if name == 'begin':
+            tag = '\\%s{%s}' % ('end', string)
+            stripped = rreplace(stripped, tag, '', 1)
+        return stripped
+
+    @staticmethod
+    def parseNameString(tex):
+        r"""Extract name of latex element from tex
+
+        >>> TOC.parseNameString('\\textbf{hello}\\textbf{yolo}')
+        ('\\textbf', 'hello')
+        """
+        match = re.search(TOC.__element, tex)
         if not match:
             return '', ''
         return match.group('name'), match.group('string')
 
-    def parseTopDepth(self):
-        """Parse highest level in tex"""
-        pass
-
-    def expandDescendants(self, branches):
+    @staticmethod
+    def expandDescendants(branches):
         """Expand descendants from list of branches
 
         :param list branches: list of immediate children as TreeOfContents objs
@@ -48,14 +59,21 @@ class TreeOfContents:
         """
         return sum([b.descendants() for b in branches], []) + branches
 
-    def parseBranches(self, descendants):
-        """
-        Parse top level of latex
+    @staticmethod
+    def parseBranches(tex):
+        r"""
+        Parse top level of provided latex
 
-        :param list elements: list of objects
-        :return: list of filtered TreeOfContents objects
+        >>> TOC.parseBranches('''
+        ... \\section{Hello}
+        ... This is some text.
+        ... \\begin{enumerate}
+        ... \\item Item!
+        ... \\end{enumerate}
+        ... \\section{Yolo}
+        ... ''')
         """
-        pass
+        return []
 
     def __getattr__(self, attr, *default):
         """Check source for attributes"""
@@ -67,7 +85,7 @@ class TreeOfContents:
 
     def __str__(self):
         """Display contents"""
-        return self.string or ''
+        return self.string
 
     def __iter__(self):
         """Iterator over children"""
