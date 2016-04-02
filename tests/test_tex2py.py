@@ -6,3 +6,7 @@ chikin = open('tests/samples/chikin.tex').read()
 ##############
 # MAIN TESTS #
 ##############
+
+def testNameStringExtraction():
+    """Test name and string extraction"""
+    pass
