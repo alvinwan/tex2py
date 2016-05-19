@@ -1,12 +1,12 @@
-from .tex2py import TreeOfContents
-from .texSoup import TexSoup
+from tex2py.tex2py import TreeOfContents
+from TexSoup import TexSoup
 
 
-def tex2py(md, *args, **kwargs):
+def tex2py(tex, *args, **kwargs):
     """
     Converts latex file Python object
 
-    :param str md: latex string
+    :param str tex: latex string
     :return: object
     """
-    return TreeOfContents.fromLatex(md, *args, **kwargs)
+    return TreeOfContents.fromLatex(tex, *args, **kwargs)

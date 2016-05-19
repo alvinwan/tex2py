@@ -2,13 +2,18 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
+tests_require = ['pytest', 'coverage == 3.7.1', 'coveralls == 0.5']
+
+with open('requirements.txt') as f:
+    install_requires = [l.strip() for l in f if l.strip()]
+
 class PyTest(TestCommand):
 
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = ['tests']
+        self.pytest_args = []
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
@@ -32,9 +37,13 @@ setup(
     packages = ['tex2py'],
     cmdclass = {'test': PyTest},
     tests_require = ['pytest'],
-    install_requires = ['TexSoup'],
+    install_requires = install_requires,
     download_url = 'https://github.com/alvinwan/tex2py/archive/%s.zip' % VERSION,
     classifiers = [
         "Topic :: Utilities",
+        "Topic :: Utilities",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python :: 3",
+        "Topic :: Software Development :: Libraries",
     ],
 )

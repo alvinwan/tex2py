@@ -1,55 +1,52 @@
 from tex2py import tex2py, TreeOfContents
-
-chikin = open('tests/samples/chikin.tex').read()
-iscream = open('tests/samples/iscream.tex').read()
+import pytest
 
 tocs2strs = lambda tocs: list(map(str, tocs))
+
+@pytest.fixture(scope='function')
+def chikin():
+    """Instance of the chikin tex file"""
+    return tex2py(open('tests/samples/chikin.tex').read())
+
+@pytest.fixture(scope='function')
+def iscream():
+    """Instance of the iscream tex file"""
+    return tex2py(open('tests/samples/iscream.tex').read())
 
 ##############
 # MAIN TESTS #
 ##############
 
-def test_basic_prop():
+def test_basic_prop(chikin):
     """tests that custom __getattr__ works"""
-    toc = tex2py(chikin)
-    assert str(toc) == ''
-    assert toc.depth == 1
-    assert len(toc.branches) == 1
-    assert isinstance(toc.section, TreeOfContents)
+    assert str(chikin) == ''
+    assert chikin.depth == 1
+    assert len(chikin.branches) == 1
+    assert isinstance(chikin.section, TreeOfContents)
 
-def test_get_tags():
+def test_get_tags(chikin):
     """tests that tags are printed correctly"""
-    toc = tex2py(chikin)
+    assert len(list(chikin.sections)) == 2
+    assert str(chikin.section) == repr(chikin.section) == chikin.section.string == 'Chikin Tales'
 
-    assert len(list(toc.sections)) == 1
-    assert str(toc.section) == repr(toc.section) == toc.section.string == 'Chikin Tales'
-
-def test_top_level():
+def test_top_level(chikin):
     """tests parse for the top level of a markdown string"""
-    toc = tex2py(chikin)
+    assert str(chikin.section) == 'Chikin Tales'
+    assert len(list(chikin.subsections)) == 0
+    assert chikin.depth == 1
 
-    assert str(toc.section) == 'Chikin Tales'
-    assert len(list(toc.subsections)) == 0
-    assert toc.depth == 1
-
-def test_top_level2():
+def test_top_level2(iscream):
     """tests parse for top level of markdown string with only subsections"""
-    toc = tex2py(iscream)
+    assert iscream.section is None
+    assert str(iscream.subsection) == 'I Scream'
+    assert len(list(iscream.subsections)) == 2
+    assert iscream.depth == 2
 
-    assert toc.section is None
-    assert str(toc.subsection) == 'I Scream'
-    assert len(list(toc.subsections)) == 2
-    assert toc.depth == 2
-
-def test_indexing():
+def test_indexing(chikin):
     """test indices"""
-    toc = tex2py(chikin)
+    assert list(chikin.section.subsections)[1] == toc.section[1]
+    assert str(chikin.section[1]) == 'Chikin Scream'
 
-    assert list(toc.section.subsections)[1] == toc.section[1]
-    assert str(toc.section[1]) == 'Chikin Scream'
-
-def test_branches_limit():
+def test_branches_limit(chikin):
     """Tests that branches include only headings of higher depth"""
-    toc = tex2py(chikin)
-
-    assert toc.section.subsection.string == 'Chikin Fly'
+    assert chikin.section.subsection.string == 'Chikin Fly'
