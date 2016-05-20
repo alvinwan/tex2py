@@ -36,8 +36,8 @@ setup(
     url = "http://github.com/alvinwan/tex2py",
     packages = ['tex2py'],
     cmdclass = {'test': PyTest},
-    tests_require = ['pytest'],
-    install_requires = install_requires,
+    tests_require = tests_require,
+    install_requires = install_requires + tests_require,
     download_url = 'https://github.com/alvinwan/tex2py/archive/%s.zip' % VERSION,
     classifiers = [
         "Topic :: Utilities",
