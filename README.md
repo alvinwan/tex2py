@@ -3,10 +3,10 @@
 [![Build Status](https://travis-ci.org/alvinwan/tex2py.svg?branch=master)](https://travis-ci.org/alvinwan/tex2py)
 [![Coverage Status](https://coveralls.io/repos/github/alvinwan/tex2py/badge.svg?branch=master)](https://coveralls.io/github/alvinwan/tex2py?branch=master)
 
-tex2py converts LaTeX into a Python parse tree, using [TexSoup](http://github.com/alvinwan/texsoup). This allows you to
-navigate a latex file as a document structure.
+Tex2py converts LaTeX into a Python parse tree, using [TexSoup](http://github.com/alvinwan/texsoup). This allows you to
+navigate latex files as trees, using either the default or a custom hierarchy. See [md2py](https://github.com/alvinwan/md2py) for a markdown parse tree.
 
-See [md2py](https://github.com/alvinwan/md2py) for a markdown parse tree.
+created by [Alvin Wan](http://alvinwan.com)
 
 ## Usage
 
