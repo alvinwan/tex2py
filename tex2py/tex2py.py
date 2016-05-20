@@ -1,9 +1,9 @@
-from TexSoup import TexSoup
+from TexSoup import TexSoup, TexNode
 
 class TreeOfContents(object):
     """Tree abstraction for latex source"""
 
-    source_type = TexSoup
+    source_type = TexNode
     valid_tags = ('addcontentsline', 'addtocontents', 'addtocounter', 'address',
     'addtolength', 'addvspace', 'alph', 'appendix', 'arabic',
     'author', 'backslash', 'baselineskip', 'baselinestretch', 'bf', 'bibitem',
@@ -43,7 +43,7 @@ class TreeOfContents(object):
     default_hierarchy = ('chapter', 'section', 'subsection')
 
     def __init__(self, root, branches=(), descendants=(), source=None,
-        depth=None):
+        depth=None, hierarchy=()):
         """Construct TreeOfContents object using source
 
         :param TexNode source: parsed source
@@ -55,13 +55,37 @@ class TreeOfContents(object):
         super().__init__()
         assert source is not None, 'NoneType source passed into TreeOfContents'
         self.source = source
-        self.depth = depth or self.parseTopDepth()
-        self.descendants = descendants or self.expandDescendants(branches)
+        self.root = root
+        self.hierarchy = hierarchy or self.findHierarchy()
+        self.depth = depth or self.parseTopDepth()-1
         self.branches = branches or self.parseBranches(descendants)
+        self.descendants = descendants or self.expandDescendants(self.branches)
+
+    def findHierarchy(self, max_subs=10):
+        """Find hierarchy for the LaTeX source.
+
+        >>> TOC.fromLatex(r'\subsection{yo}\section{hello}').findHierarchy()
+        ('section', 'subsection')
+        >>> TOC.fromLatex(
+        ... r'\subsubsubsection{huh}\subsubsection{hah}').findHierarchy()
+        ('subsubsection', 'subsubsubsection')
+        >>> TOC.fromLatex('\section{h1}\subsection{subh1}\section{h2}\
+        ... \subsection{subh2}').findHierarchy()
+        ('section', 'subsection')
+        """
+        hierarchy = []
+        defaults = TOC.default_hierarchy + tuple(
+            '%ssection' % ('sub'*i) for i in range(2, max_subs))
+        for level in defaults:
+            if getattr(self.source, level):
+                hierarchy.append(level)
+        return tuple(hierarchy)
 
     @staticmethod
     def getHeadingLevel(ts, hierarchy=default_hierarchy):
-        """
+        """Extract heading level for a particular Tex element, given a specified
+        hierarchy.
+
         >>> ts = TexSoup(r'\section{Hello}').section
         >>> TOC.getHeadingLevel(ts)
         2
@@ -81,32 +105,43 @@ class TreeOfContents(object):
                     name, i = name[3:], i+1
                 if name == 'section':
                     return i+2
-                return 0
+            return float('inf')
         except (AttributeError, TypeError):
-            return 0
+            return float('inf')
 
-    def parseTopDepth(self):
+    def parseTopDepth(self, descendants=()):
         """Parse tex for highest tag in hierarchy
 
         >>> TOC.fromLatex('\\section{Hah}\\subsection{No}').parseTopDepth()
         1
-        >>> TOC.fromLatex(
-        ... '\\subsubsubsection{Yo}\\subsubsection{Hah}').parseTopDepth()
-        5
+        >>> s = '\\subsubsubsection{Yo}\\subsubsection{Hah}'
+        >>> TOC.fromLatex(s).parseTopDepth()
+        1
+        >>> h = ('section', 'subsubsection', 'subsubsubsection')
+        >>> TOC.fromLatex(s, hierarchy=h).parseTopDepth()
+        2
         """
-        for i, heading in enumerate(TOC.default_hierarchy):
-            if getattr(self.source, heading):
-                return i
+        descendants = list(descendants) or \
+            list(getattr(self.source, 'descendants', descendants))
+        if not descendants:
+            return -1
+        return min(TOC.getHeadingLevel(e, self.hierarchy) for e in descendants)
 
-        return max(TOC.getHeadingLevel(e) for e in self.source.descendants)
-
-    def expandDescendants(self, branches):
+    def expandDescendants(self, branches=None):
         """
         Expand descendants from list of branches
         :param list branches: list of immediate children as TreeOfContents objs
         :return: list of all descendants
+
+        >>> toc = TOC.fromLatex(r'\section{h1}\subsection{subh1}\section{h2}\
+        ... \subsection{subh2}')
+        >>> len(list(toc.source.descendants))
+        8
+        >>> len(toc.descendants)
+        8
         """
-        return sum([b.descendants() for b in branches], []) + \
+        branches = branches or self.branches
+        return sum([b.descendants for b in branches], []) + \
             [b.source for b in branches]
 
     def parseBranches(self, descendants):
@@ -114,18 +149,28 @@ class TreeOfContents(object):
         Parse top level of latex
         :param list elements: list of source objects
         :return: list of filtered TreeOfContents objects
+
+        >>> toc = TOC.fromLatex(r'\section{h1}\subsection{subh1}\section{h2}\
+        ... \subsection{subh2}')
+        >>> toc.parseTopDepth(toc.descendants)
+        1
+        >>> toc.parseBranches(toc.descendants)
+        [h1, h2]
+        >>> len(toc.branches)
+        2
+        >>> len(toc.section.branches)
+        1
         """
         strfy = lambda s: s if isinstance(s, str) else s.string
-        parsed, parent, cond = [], False, lambda b: (strfy(b) or '').strip()
-        for branch in filter(cond, descendants):
-            if self.getHeadingLevel(branch) == self.depth:
-                parsed.append({'root':strfy(branch), 'source':branch})
-                parent = True
-            elif not parent:
-                parsed.append({'root':strfy(branch), 'source':branch})
-            else:
-                parsed[-1].setdefault('descendants', []).append(branch)
-        return [TOC(depth=self.depth+1, **kwargs) for kwargs in parsed]
+        i, branches = self.parseTopDepth(descendants), []
+        for descendant in descendants:
+            if self.getHeadingLevel(descendant, self.hierarchy) == i:
+                branches.append({'source': descendant})
+            if self.getHeadingLevel(descendant, self.hierarchy) > i \
+                and branches:
+                branches[-1].setdefault('descendants', []).append(descendant)
+        return [TOC(strfy(descendant), depth=i, hierarchy=self.hierarchy,
+            **branch) for branch in branches]
 
     def __getattr__(self, attr, *default):
         """Check source for attributes"""
@@ -168,7 +213,7 @@ class TreeOfContents(object):
         return TOC.fromLatex(open(path).read())
 
     @staticmethod
-    def fromLatex(tex):
+    def fromLatex(tex, *args, **kwargs):
         """Creates abstraction using Latex
 
         :param str tex: Latex
@@ -176,6 +221,6 @@ class TreeOfContents(object):
         """
         source = TexSoup(tex)
         return TOC('[document]', source=source,
-            descendants=source.document.descendants)
+            descendants=list(source.descendants), *args, **kwargs)
 
 TOC = TreeOfContents
