@@ -65,9 +65,9 @@ will generate a tree, abstracting the below structure.
 ```
           <Document>
           /        \
-  Chikin Tales   Chikin Scraem
+  Chikin Tales   Chikin Scream
       /            /     \
-  Waddling  Plopping    I Scream
+ Chikin Fly  Plopping   I Scream
 ```
 
 At the global level, we can access the title.
