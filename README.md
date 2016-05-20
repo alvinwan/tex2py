@@ -8,7 +8,15 @@ navigate latex files as trees, using either the default or a custom hierarchy. S
 
 created by [Alvin Wan](http://alvinwan.com)
 
-## Usage
+# Installation
+
+Install via pip.
+
+```
+pip install tex2py
+```
+
+# Usage
 
 LaTeX2Python offers only one function `tex2py`, which generates a Python
 parse tree from Latex. This object is a navigable, "Tree of Contents"
@@ -102,15 +110,7 @@ True
 Chikin Scream
 ```
 
-## Installation
-
-Install via pip.
-
-```
-pip install tex2py
-```
-
-## Additional Notes
+# Additional Notes
 
 - Behind the scenes, tex2py uses [`TexSoup`](https://github.com/alvinwan/TexSoup). All tex2py objects have a
 `source` attribute containing a [TexSoup](https://github.com/alvinwan/TexSoup) object.
