@@ -1,6 +1,6 @@
 [run]
 branch = True
-include = TexSoup/*
+include = tex2py/*
 omit =
     *__init__.py
 
