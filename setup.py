@@ -1,10 +1,13 @@
+import os
 import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
 tests_require = ['pytest', 'coverage == 3.7.1', 'coveralls == 0.5']
 
-with open('requirements.txt') as f:
+requirements_file = os.path.dirname(os.path.abspath(__file__)) +\
+    '/requirements.txt'
+with open(requirements_file) as f:
     install_requires = [l.strip() for l in f if l.strip()]
 
 class PyTest(TestCommand):
