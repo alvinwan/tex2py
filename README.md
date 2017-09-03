@@ -73,7 +73,9 @@ will generate a tree, abstracting the below structure.
 At the global level, we can access the title.
 
 ```
->>> toc = tex2py(markdown)
+>>> from tex2py import tex2py
+>>> with open('chikin.tex') as f: data = f.read()
+>>> toc = tex2py(data)
 >>> toc.section
 Chikin Tales
 >>> str(toc.section)
