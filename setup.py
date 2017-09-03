@@ -3,12 +3,9 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
+install_requires = ['TexSoup']
 tests_require = ['pytest', 'coverage == 3.7.1', 'coveralls == 0.5']
 
-requirements_file = os.path.dirname(os.path.abspath(__file__)) +\
-    '/requirements.txt'
-with open(requirements_file) as f:
-    install_requires = [l.strip() for l in f if l.strip()]
 
 class PyTest(TestCommand):
 
@@ -27,7 +24,7 @@ class PyTest(TestCommand):
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
-VERSION = '0.0.1'
+VERSION = '0.0.3'
 
 setup(
     name = "tex2py",
