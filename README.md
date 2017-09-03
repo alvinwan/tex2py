@@ -110,6 +110,19 @@ True
 Chikin Scream
 ```
 
+You can now print the document tree. (There is some weirdness with branches beyond titles, so for only titles, we have the following:
+
+```
+           ┌Chikin Tales┐
+           │            └Chikin Fly
+ [document]┤
+           │             ┌Plopping
+           └Chikin Scream┤
+                         │        
+                         │        
+                         └I Scream
+```
+
 # Additional Notes
 
 - Behind the scenes, tex2py uses [`TexSoup`](https://github.com/alvinwan/TexSoup). All tex2py objects have a

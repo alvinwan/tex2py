@@ -1,4 +1,6 @@
 from TexSoup import TexSoup, TexNode
+from pptree import print_tree
+
 
 class TreeOfContents(object):
     """Tree abstraction for latex source"""
@@ -60,6 +62,10 @@ class TreeOfContents(object):
         self.depth = depth or self.parseTopDepth()-1
         self.branches = branches or self.parseBranches(descendants)
         self.descendants = descendants or self.expandDescendants(self.branches)
+
+    @property
+    def name(self):
+        return str(self)
 
     def findHierarchy(self, max_subs=10):
         """Find hierarchy for the LaTeX source.
@@ -194,7 +200,7 @@ class TreeOfContents(object):
 
     def __str__(self):
         """Display contents"""
-        return self.string or ''
+        return self.string or self.root or ''
 
     def __iter__(self):
         """Iterator over children"""
@@ -202,6 +208,10 @@ class TreeOfContents(object):
 
     def __getitem__(self, i):
         return self.branches[i]
+
+    def print(self):
+        """Prints entire tree, from this node as the root."""
+        print_tree(self, childattr='branches', nameattr='name')
 
     @staticmethod
     def fromFile(path):

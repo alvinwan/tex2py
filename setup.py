@@ -1,9 +1,8 @@
-import os
 import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-install_requires = ['TexSoup']
+install_requires = ['TexSoup==0.1', 'pptree==2.0']
 tests_require = ['pytest', 'coverage == 3.7.1', 'coveralls == 0.5']
 
 
