@@ -6,6 +6,8 @@
 Tex2py converts LaTeX into a Python parse tree, using [TexSoup](http://github.com/alvinwan/texsoup). This allows you to
 navigate latex files as trees, using either the default or a custom hierarchy. See [md2py](https://github.com/alvinwan/md2py) for a markdown parse tree.
 
+> Note `tex2py` currently only supports Python3.
+
 created by [Alvin Wan](http://alvinwan.com)
 
 # Installation
