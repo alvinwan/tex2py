@@ -83,7 +83,7 @@ class TreeOfContents(object):
         defaults = TOC.default_hierarchy + tuple(
             '%ssection' % ('sub'*i) for i in range(2, max_subs))
         for level in defaults:
-            if getattr(self.source, level):
+            if getattr(self.source, level, False):
                 hierarchy.append(level)
         return tuple(hierarchy)
 
