@@ -1,7 +1,6 @@
 from TexSoup import TexSoup, TexNode
 from pptree import print_tree
 
-
 class TreeOfContents(object):
     """Tree abstraction for latex source"""
 
@@ -142,9 +141,9 @@ class TreeOfContents(object):
         >>> toc = TOC.fromLatex(r'\section{h1}\subsection{subh1}\section{h2}\
         ... \subsection{subh2}')
         >>> len(list(toc.source.descendants))
-        8
+        9
         >>> len(toc.descendants)
-        8
+        9
         """
         branches = branches or self.branches
         return sum([b.descendants for b in branches], []) + \
@@ -186,11 +185,11 @@ class TreeOfContents(object):
                 return self.source
             return getattr(self.source, attr, *default)
         if attr in self.valid_tags:
-            return next(filter(lambda t: t.name == attr, self.branches), None)
+            return next(filter(lambda t: t.source.name == attr, self.branches), None)
         if len(default):
             return default[0]
         if attr[-1] == 's' and tag in self.valid_tags:
-            condition = lambda t: t.name == tag
+            condition = lambda t: t.source.name == tag
             return filter(condition, self.branches)
         raise AttributeError("'TreeOfContents' object has no attribute '%s'" % attr)
 
