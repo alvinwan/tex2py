@@ -9,7 +9,7 @@ install:
   - python3 setup.py install
 
 script:
-  - coverage run setup.py test
+  - coverage run --source=tex2py setup.py test
 
 after_success:
-  - coveralls
+  - CI=true TRAVIS=true coveralls
