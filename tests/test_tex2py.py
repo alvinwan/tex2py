@@ -64,7 +64,7 @@ def test_from_latex(chikin, tmpdir):
     """Tests conversion from latex to tex2py"""
     p = tmpdir.mkdir("tmp").join("hello.tex")
     p.write(str(chikin.source))
-    new_chikin = TreeOfContents.fromFile(p.realpath())
+    new_chikin = TreeOfContents.fromFile(p.open())
     assert chikin.section.subsection.string == new_chikin.section.subsection.string
 
 def test_print(chikin):

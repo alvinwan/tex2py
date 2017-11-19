@@ -210,13 +210,15 @@ class TreeOfContents(object):
         print_tree(self, childattr='branches', nameattr='name')
 
     @staticmethod
-    def fromFile(path):
+    def fromFile(path_or_buffer):
         """Creates abstraction using path to file
 
-        :param str path: path to tex file
+        :param str path_or_buffer: path to tex file or buffer
         :return: TreeOfContents object
         """
-        return TOC.fromLatex(open(path).read())
+        return TOC.fromLatex(open(path_or_buffer).read() 
+                             if isinstance(path_or_buffer, str)
+                             else path_or_buffer)
 
     @staticmethod
     def fromLatex(tex, *args, **kwargs):
