@@ -20,7 +20,7 @@ def iscream():
 
 def test_basic_prop(chikin):
     """tests that custom __getattr__ works"""
-    assert str(chikin) == '[document]'
+    assert str(chikin) == '[document]' == chikin.name
     assert chikin.depth == 0
     assert len(chikin.branches) == 2
     assert isinstance(chikin.section, TreeOfContents)
