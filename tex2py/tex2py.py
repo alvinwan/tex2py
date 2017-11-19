@@ -166,7 +166,6 @@ class TreeOfContents(object):
         >>> len(toc.section.branches)
         1
         """
-        strfy = lambda s: s if isinstance(s, str) else s.string
         i, branches = self.parseTopDepth(descendants), []
         for descendant in descendants:
             if self.getHeadingLevel(descendant, self.hierarchy) == i:
@@ -174,7 +173,7 @@ class TreeOfContents(object):
             if self.getHeadingLevel(descendant, self.hierarchy) > i \
                 and branches:
                 branches[-1].setdefault('descendants', []).append(descendant)
-        return [TOC(strfy(descendant), depth=i, hierarchy=self.hierarchy,
+        return [TOC(str(descendant), depth=i, hierarchy=self.hierarchy,
             **branch) for branch in branches]
 
     def __getattr__(self, attr, *default):
