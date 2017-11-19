@@ -176,17 +176,15 @@ class TreeOfContents(object):
         return [TOC(str(descendant), depth=i, hierarchy=self.hierarchy,
             **branch) for branch in branches]
 
-    def __getattr__(self, attr, *default):
+    def __getattr__(self, attr):
         """Check source for attributes"""
         tag = attr[:-1]
         if attr in self.allowed_attrs:
             if isinstance(self.source, str):
                 return self.source
-            return getattr(self.source, attr, *default)
+            return getattr(self.source, attr, '')
         if attr in self.valid_tags:
             return next(filter(lambda t: t.source.name == attr, self.branches), None)
-        if len(default):
-            return default[0]
         if attr[-1] == 's' and tag in self.valid_tags:
             condition = lambda t: t.source.name == tag
             return filter(condition, self.branches)

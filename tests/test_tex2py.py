@@ -97,6 +97,6 @@ def test_find_hierarchy(chikin):
 
 def test_invalid_attr(chikin):
     """Test getattr errors."""
-    assert getattr(chikin, 'wallawallabingbang', 'huehue') == 'huehue'
+    print(chikin.__class__)
     with pytest.raises(AttributeError):
         chikin.wallawallabingbang
