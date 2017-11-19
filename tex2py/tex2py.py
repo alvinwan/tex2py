@@ -176,17 +176,15 @@ class TreeOfContents(object):
         return [TOC(str(descendant), depth=i, hierarchy=self.hierarchy,
             **branch) for branch in branches]
 
-    def __getattr__(self, attr, *default):
+    def __getattr__(self, attr):
         """Check source for attributes"""
         tag = attr[:-1]
         if attr in self.allowed_attrs:
             if isinstance(self.source, str):
                 return self.source
-            return getattr(self.source, attr, *default)
+            return getattr(self.source, attr, '')
         if attr in self.valid_tags:
             return next(filter(lambda t: t.source.name == attr, self.branches), None)
-        if len(default):
-            return default[0]
         if attr[-1] == 's' and tag in self.valid_tags:
             condition = lambda t: t.source.name == tag
             return filter(condition, self.branches)
@@ -212,13 +210,15 @@ class TreeOfContents(object):
         print_tree(self, childattr='branches', nameattr='name')
 
     @staticmethod
-    def fromFile(path):
+    def fromFile(path_or_buffer):
         """Creates abstraction using path to file
 
-        :param str path: path to tex file
+        :param str path_or_buffer: path to tex file or buffer
         :return: TreeOfContents object
         """
-        return TOC.fromLatex(open(path).read())
+        return TOC.fromLatex(open(path_or_buffer).read() 
+                             if isinstance(path_or_buffer, str)
+                             else path_or_buffer)
 
     @staticmethod
     def fromLatex(tex, *args, **kwargs):

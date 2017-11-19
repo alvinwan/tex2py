@@ -20,7 +20,7 @@ def iscream():
 
 def test_basic_prop(chikin):
     """tests that custom __getattr__ works"""
-    assert str(chikin) == '[document]'
+    assert str(chikin) == '[document]' == chikin.name
     assert chikin.depth == 0
     assert len(chikin.branches) == 2
     assert isinstance(chikin.section, TreeOfContents)
@@ -39,6 +39,7 @@ def test_top_level2(iscream):
     """tests parse for top level of markdown string with only subsections"""
     assert iscream.section is None
     assert len(iscream.branches) == 2
+    assert len(list(iscream)) == 2
     assert str(iscream.subsection) == 'I Scream'
     assert len(list(iscream.subsections)) == 2
     assert iscream.depth == 0
@@ -59,6 +60,17 @@ def test_branches_limit(chikin):
     """Tests that branches include only headings of higher depth"""
     assert chikin.section.subsection.string == 'Chikin Fly'
 
+def test_from_latex(chikin, tmpdir):
+    """Tests conversion from latex to tex2py"""
+    p = tmpdir.mkdir("tmp").join("hello.tex")
+    p.write(str(chikin.source))
+    new_chikin = TreeOfContents.fromFile(p.open())
+    assert chikin.section.subsection.string == new_chikin.section.subsection.string
+
+def test_print(chikin):
+    """Tests print does not error"""
+    chikin.print()
+
 #################
 # UTILITY TESTS #
 #################
@@ -78,3 +90,13 @@ def test_find_hierarchy(chikin):
     section = TexSoup(r'\section{asdf}').section
     assert chikin.getHeadingLevel(section, hie) == 1
     assert chikin.parseTopDepth(chikin.descendants) == 1
+
+###############
+# ERROR TESTS #
+###############
+
+def test_invalid_attr(chikin):
+    """Test getattr errors."""
+    print(chikin.__class__)
+    with pytest.raises(AttributeError):
+        chikin.wallawallabingbang
