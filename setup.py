@@ -2,7 +2,7 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-install_requires = ['TexSoup==0.1', 'pptree==2.0']
+install_requires = ['TexSoup==0.1.4', 'pptree==2.0']
 tests_require = ['pytest', 'pytest-cov==2.5.1', 'coverage == 3.7.1', 'coveralls == 1.1']
 # hack
 install_requires = install_requires + tests_require
@@ -24,7 +24,7 @@ class PyTest(TestCommand):
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
-VERSION = '0.0.3'
+VERSION = '0.0.5'
 
 setup(
     name = "tex2py",
